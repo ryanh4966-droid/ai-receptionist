@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Analytics Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <h1>Analytics Dashboard</h1>
+
+  <section>
+    <h2>Overview</h2>
+    <div id="stats">
+      <div class="stat-box">
+        <h3>Total Leads</h3>
+        <p id="total-leads">0</p>
+      </div>
+
+      <div class="stat-box">
+        <h3>Total Conversations</h3>
+        <p id="total-conversations">0</p>
+      </div>
+
+      <div class="stat-box">
+        <h3>Total Bookings</h3>
+        <p id="total-bookings">0</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Daily Leads</h2>
+    <canvas id="leadsChart"></canvas>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="analytics.js"></script>
+</body>
+</html>

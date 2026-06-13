@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <h1>Admin Dashboard</h1>
+
+  <section id="clients-section">
+    <h2>Clients</h2>
+
+    <table id="clients-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Business</th>
+          <th>Domain</th>
+          <th>Plan</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="add-client-btn">Add Client</button>
+  </section>
+
+  <section id="new-client-section" style="display:none;">
+    <h2>Add New Client</h2>
+
+    <label>Client ID</label>
+    <input id="new-client-id" type="text" />
+
+    <label>Business Name</label>
+    <input id="new-client-name" type="text" />
+
+    <label>Domain</label>
+    <input id="new-client-domain" type="text" />
+
+    <button id="save-client-btn">Save Client</button>
+  </section>
+
+  <script src="admin.js"></script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+import pool from "../db/pool.js";
+
+/**
+ * Extract lead info from AI response using simple pattern matching.
+ * You can upgrade this later with LLM-based extraction.
+ */
+export function extractLeadInfo(text) {
+  const lead = {};
+
+  const nameMatch = text.match(/name is ([A-Za-z ]+)/i);
+  const emailMatch = text.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/);
+  const phoneMatch = text.match(/(\+?\d[\d -]{7,}\d)/);
+
+  if (nameMatch) lead.name = nameMatch[1].trim();
+  if (emailMatch) lead.email = emailMatch[0].trim();
+  if (phoneMatch) lead.phone = phoneMatch[0].trim();
+
+  return lead;
+}
+
+/**
+ * Save lead to database
+ */
+export async function saveLead(clientId, lead) {
+  if (!lead.name && !lead.email && !lead.phone) return null;
+
+  const result = await pool.query(
+    `INSERT INTO leads (client_id, name, email, phone, message)
+     VALUES ($1, $2, $3, $4, $5)
+     RETURNING *`,
+    [
+      clientId,
+      lead.name || null,
+      lead.email || null,
+      lead.phone || null,
+      lead.message || null,
+    ]
+  );
+
+  return result.rows[0];
+}

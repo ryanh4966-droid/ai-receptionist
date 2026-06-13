@@ -1,0 +1,31 @@
+import express from "express";
+import { tenantMiddleware } from "../middleware/tenantMiddleware.js";
+import { askAI } from "../services/aiService.js";
+import pool from "../db/pool.js";
+
+const router = express.Router();
+
+router.post("/", tenantMiddleware, async (req, res) => {
+  const { message } = req.body;
+  const client = req.client;
+
+  if (!message) {
+    return res.status(400).json({ error: "message is required" });
+  }
+
+  try {
+    const reply = await askAI(client, message);
+
+    await pool.query(
+      "INSERT INTO conversations (client_id, transcript) VALUES ($1, $2)",
+      [client.id, JSON.stringify({ user: message, ai: reply })]
+    );
+
+    res.json({ reply });
+  } catch (err) {
+    console.error("Chat route error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+export default router;

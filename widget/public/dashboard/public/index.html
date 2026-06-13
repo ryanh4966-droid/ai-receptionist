@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Client Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <h1>Client Dashboard</h1>
+
+  <section id="leads-section">
+    <h2>Leads</h2>
+    <table id="leads-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Message</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section id="settings-section">
+    <h2>AI Settings</h2>
+
+    <label>AI Personality</label>
+    <textarea id="ai-personality"></textarea>
+
+    <label>Widget Color</label>
+    <input type="color" id="widget-color" />
+
+    <label>
+      <input type="checkbox" id="booking-enabled" />
+      Enable Booking
+    </label>
+
+    <button id="save-settings">Save Settings</button>
+  </section>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>
