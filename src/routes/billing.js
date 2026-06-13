@@ -1,38 +1,46 @@
+// src/routes/billing.js
+
 import express from "express";
-import Stripe from "stripe";
-import { createCheckoutSession, handleStripeWebhook } from "../services/billingService.js";
+import {
+  createCheckoutSession,
+  handleStripeWebhook,
+} from "../services/billingService.js";
 
 const router = express.Router();
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-router.post("/checkout", async (req, res) => {
-  const { client_id, plan } = req.body;
-
-  const priceId =
-    plan === "pro"
-      ? process.env.STRIPE_PRICE_PRO
-      : process.env.STRIPE_PRICE_BASIC;
-
-  const url = await createCheckoutSession(client_id, priceId);
-  res.json({ url });
-});
-
-router.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
-  const sig = req.headers["stripe-signature"];
-
-  let event;
+// Create checkout session
+router.post("/create-checkout-session", async (req, res) => {
   try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (err) {
-    return res.status(400).send(`Webhook error: ${err.message}`);
-  }
+    const { priceId } = req.body;
 
-  handleStripeWebhook(event);
-  res.json({ received: true });
+    const session = await createCheckoutSession(
+      priceId,
+      process.env.SUCCESS_URL || "https://example.com/success",
+      process.env.CANCEL_URL || "https://example.com/cancel"
+    );
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("Checkout session error:", err);
+    res.status(500).json({ error: "Failed to create checkout session" });
+  }
 });
+
+// Stripe webhook
+router.post(
+  "/webhook",
+  express.raw({ type: "application/json" }),
+  (req, res) => {
+    try {
+      const signature = req.headers["stripe-signature"];
+      const event = handleStripeWebhook(req, signature);
+
+      res.json({ received: true });
+    } catch (err) {
+      console.error("Webhook error:", err);
+      res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+  }
+);
 
 export default router;

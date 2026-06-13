@@ -1,42 +1,55 @@
+// src/services/billingService.js
+
 import Stripe from "stripe";
-import pool from "../db/pool.js";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const stripeKey = process.env.STRIPE_SECRET_KEY;
 
-export async function createCheckoutSession(clientId, priceId) {
-  const session = await stripe.checkout.sessions.create({
+// Stripe or mock mode
+let stripe;
+
+if (!stripeKey) {
+  console.warn("⚠️ Stripe disabled: No STRIPE_SECRET_KEY found. Using mock billing service.");
+
+  stripe = {
+    checkout: {
+      sessions: {
+        create: async () => ({
+          id: "mock_session_123",
+          url: "https://example.com/mock-checkout",
+        }),
+      },
+    },
+    webhookConstructEvent: () => null,
+  };
+} else {
+  stripe = new Stripe(stripeKey);
+}
+
+// Create checkout session
+export async function createCheckoutSession(priceId, successUrl, cancelUrl) {
+  return await stripe.checkout.sessions.create({
     mode: "subscription",
-    payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: "http://localhost:8081?success=true",
-    cancel_url: "http://localhost:8081?canceled=true",
-    metadata: { clientId },
+    success_url: successUrl,
+    cancel_url: cancelUrl,
   });
-
-  return session.url;
 }
 
-export async function handleStripeWebhook(event) {
-  const data = event.data.object;
-
-  if (event.type === "checkout.session.completed") {
-    const clientId = data.metadata.clientId;
-
-    await pool.query(
-      `UPDATE clients SET status = 'active', plan = 'basic' WHERE id = $1`,
-      [clientId]
-    );
+// Handle Stripe webhook
+export function handleStripeWebhook(req, signature) {
+  if (!stripeKey) {
+    console.warn("⚠️ Webhook ignored (mock mode).");
+    return null;
   }
 
-  if (event.type === "invoice.payment_failed") {
-    const subscription = data.subscription;
-    const sub = await stripe.subscriptions.retrieve(subscription);
-
-    const clientId = sub.metadata.clientId;
-
-    await pool.query(
-      `UPDATE clients SET status = 'inactive' WHERE id = $1`,
-      [clientId]
-    );
-  }
+  return stripe.webhooks.constructEvent(
+    req.rawBody,
+    signature,
+    process.env.STRIPE_WEBHOOK_SECRET
+  );
 }
+
+export default {
+  createCheckoutSession,
+  handleStripeWebhook,
+};
